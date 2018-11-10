@@ -23,9 +23,9 @@ def parse_gold_standard(in_dataset_file):
     print "Reading... " + os.path.basename(in_dataset_file)
     for item in data[1:]:
         pair = []
-	prefixed_item1 = prefix+item[0]
-	prefixed_item2 = prefix+item[1]
-	prefixed_pair = [prefixed_item1, prefixed_item2]
+        prefixed_item1 = prefix+item[0]
+        prefixed_item2 = prefix+item[1]
+        prefixed_pair = [prefixed_item1, prefixed_item2]
 
         pair.append(prefixed_pair)
         pair.append(item[2])
@@ -84,9 +84,9 @@ def evaluate_we_spearman(reps, gt_list):
         word2 = item_gt[0][1] + suffix
 
         if (not word1 in reps) or (not word2 in reps):
-           simlex_gold_list_all_included.append(item_gt[1])
-           simlex_we_list_all_included.append(0.0)
-           counter_excluded += 1
+            simlex_gold_list_all_included.append(item_gt[1])
+            simlex_we_list_all_included.append(0.0)
+            counter_excluded += 1
         else:
             score_pair = np.inner(reps[word1],reps[word2])
 

@@ -7,8 +7,8 @@ import torch
 import pickle
 import logging
 
-from models import build_model
-from trainer_batch import Trainer
+from code.models import build_model
+from code.trainer_batch import Trainer
 
 parser = argparse.ArgumentParser(description='Adversarial post-processing')
 

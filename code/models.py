@@ -6,18 +6,18 @@ import torch
 from torch import nn
 import numpy as np
 import logging
-from dictionary import Dictionary
+from code.dictionary import Dictionary
 
 class GaussianNoise(nn.Module):
     def __init__(self, cuda, stddev=0.2):
         super(GaussianNoise, self).__init__()
         self.stddev = stddev
-	self.cuda = cuda
+        self.cuda = cuda
 
     def forward(self, din):
         if self.training:
-	    noise = torch.autograd.Variable(torch.randn(din.size()))
-	    noise = noise.cuda() if self.cuda else noise
+            noise = torch.autograd.Variable(torch.randn(din.size()))
+            noise = noise.cuda() if self.cuda else noise
             return din + noise * self.stddev
         return din
 
@@ -34,8 +34,8 @@ class Discriminator(nn.Module):
 
         layers = [nn.Dropout(self.dis_input_dropout)]
         if params.noise:
-	    layers.append(GaussianNoise(params.cuda))    
-	for i in range(self.dis_layers + 1):
+            layers.append(GaussianNoise(params.cuda))
+        for i in range(self.dis_layers + 1):
             input_dim = self.emb_dim if i == 0 else self.dis_hid_dim
             output_dim = 1 if i == self.dis_layers else self.dis_hid_dim
             layers.append(nn.Linear(input_dim, output_dim))
@@ -68,8 +68,8 @@ class Generator(nn.Module):
             if i < self.dis_layers:
                 layers.append(nn.LeakyReLU(0.2))
                 layers.append(nn.Dropout(self.dis_dropout))
-		if params.noise:
-		    layers.append(GaussianNoise(params.cuda))
+            if params.noise:
+                layers.append(GaussianNoise(params.cuda))
         self.layers = nn.Sequential(*layers)
 
     def forward(self, x):
@@ -88,9 +88,9 @@ def load_external_embeddings(params, emb_path):
     _emb_dim_file = params.emb_dim
     with codecs.open(emb_path) as f:
         for i, line in enumerate(f):
-	    if len(line.split()) == 2:
-		i -= 1
-		continue
+            if len(line.split()) == 2:
+                i -= 1
+                continue
             word, vect = line.rstrip().split(' ', 1)
             vect = np.fromstring(vect, sep=' ')
             if np.linalg.norm(vect) == 0:  # avoid to have null embeddings

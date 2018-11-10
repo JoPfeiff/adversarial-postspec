@@ -9,7 +9,7 @@ from torch import optim
 from torch.autograd import Variable
 from torch.nn import functional as F
 
-from models import load_external_embeddings, normalize_embeddings
+from code.models import load_external_embeddings, normalize_embeddings
 
 def clip_parameters(model, clip):
     """
@@ -74,13 +74,13 @@ class MaxMargin_Loss(torch.nn.Module):
         self.params = params
 
     def forward(self, y_pred, y_true):
-	cost = 0.
-	for i in xrange(0, self.params.sim_neg):
+        cost = 0.0
+        for i in xrange(0, self.params.sim_neg):
             new_true = torch.randperm(self.params.batch_size)
             new_true = new_true.cuda() if self.params.cuda else new_true
             new_true = y_true[new_true]
             mg = self.params.sim_margin - F.cosine_similarity(y_true, y_pred) + F.cosine_similarity(new_true, y_pred)
-	    cost += torch.clamp(mg, min=0)
+        cost += torch.clamp(mg, min=0)
         return cost.mean()
 
 class Trainer(object):
@@ -96,7 +96,7 @@ class Trainer(object):
         self.mapping = mapping
         self.discriminator = discriminator
         self.params = params
-	# optimizers
+        # optimizers
         if hasattr(params, 'map_optimizer'):
             optim_fn, optim_params = get_optimizer(params.map_optimizer)
             self.map_optimizer = optim_fn(mapping.parameters(), **optim_params)
@@ -106,7 +106,7 @@ class Trainer(object):
         if hasattr(params, 'sim_optimizer'):
             optim_fn, optim_params = get_optimizer(params.sim_optimizer)
             self.sim_optimizer = optim_fn(mapping.parameters(), **optim_params)
-	self.max_margin = MaxMargin_Loss(params)
+        self.max_margin = MaxMargin_Loss(params)
         # best validation score
         self.best_valid_metric = 0
 
@@ -116,20 +116,20 @@ class Trainer(object):
         """
         Get similarity input batch / output target.
         """
-	# select random word IDs
+        # select random word IDs
         bs = self.params.batch_size
-     	src_ids = np.random.randint(0, len(self.src_dico), bs)
-    	words = [self.src_dico[si] for si in src_ids]
+        src_ids = np.random.randint(0, len(self.src_dico), bs)
+        words = [self.src_dico[si] for si in src_ids]
         tgt_ids = [self.tgt_dico.index(w) for w in words]
         src_ids = torch.LongTensor(src_ids)
-    	tgt_ids = torch.LongTensor(tgt_ids)
-    	if self.params.cuda:
+        tgt_ids = torch.LongTensor(tgt_ids)
+        if self.params.cuda:
             src_ids = src_ids.cuda()
             tgt_ids = tgt_ids.cuda()
 
         # get word embeddings
         src_emb = self.src_emb(Variable(src_ids, volatile=True))
-	tgt_emb = self.tgt_emb(Variable(tgt_ids, volatile=True))
+        tgt_emb = self.tgt_emb(Variable(tgt_ids, volatile=True))
         src_emb = self.mapping(Variable(src_emb.data, volatile=False))
         tgt_emb = Variable(tgt_emb.data, volatile=False)
 
@@ -154,18 +154,18 @@ class Trainer(object):
         tgt_emb = Variable(tgt_emb.data, volatile=volatile)
 
         yp = torch.FloatTensor([self.params.dis_smooth] * bs)
-	yn = torch.FloatTensor([1 - self.params.dis_smooth] * bs)
+        yn = torch.FloatTensor([1 - self.params.dis_smooth] * bs)
         yp = Variable(yp.cuda() if self.params.cuda else yp)
-	yn = Variable(yn.cuda() if self.params.cuda else yn)
+        yn = Variable(yn.cuda() if self.params.cuda else yn)
 
         return src_emb, tgt_emb, yp, yn
 
     def sim_step(self, stats):
-	"""
-	Train the similarity between mapped src and tgt
-	"""
-	self.discriminator.eval()
-	# loss
+        """
+        Train the similarity between mapped src and tgt
+        """
+        self.discriminator.eval()
+        # loss
         x, y = self.get_sim_xy()
         ycos = torch.Tensor([1.] * self.params.batch_size)
         ycos = ycos.cuda() if self.params.cuda else ycos
@@ -175,8 +175,8 @@ class Trainer(object):
             loss = self.max_margin(x, y)
         else:
             raise Exception('Unknown similarity loss: "%s"' % self.params.sim_loss)
-	loss = self.params.sim_lambda * loss
-    	stats['SIM_COSTS'].append(loss.data[0])
+        loss = self.params.sim_lambda * loss
+        stats['SIM_COSTS'].append(loss.data[0])
 
         # check NaN
         if (loss != loss).data.any():
@@ -196,10 +196,10 @@ class Trainer(object):
 
         # loss
         xp, xn, yp, yn = self.get_dis_xy(volatile=True)
-	for x, y in [(xp, yp), (xn, yn)]:
+        for x, y in [(xp, yp), (xn, yn)]:
             preds = self.discriminator(Variable(x.data))
             loss = self.params.dis_lambda * F.binary_cross_entropy(preds, y)
-	    stats['DIS_COSTS'].append(loss.data[0])
+            stats['DIS_COSTS'].append(loss.data[0])
 
             # check NaN
             if (loss != loss).data.any():
@@ -223,11 +223,11 @@ class Trainer(object):
 
         # loss
         xp, xn, yp, yn = self.get_dis_xy(volatile=False)
-	x = torch.cat([xp, xn], 0)
-	y = torch.cat([yp, yn], 0)
+        x = torch.cat([xp, xn], 0)
+        y = torch.cat([yp, yn], 0)
         preds = self.discriminator(x)
         loss = F.binary_cross_entropy(preds, 1 - y)
-	loss = self.params.gen_lambda * loss
+        loss = self.params.gen_lambda * loss
         stats['GEN_COSTS'].append(loss.data[0])
 
         # check NaN
@@ -278,7 +278,7 @@ class Trainer(object):
             logging.info('* Best value for "%s": %.5f' % (metric, to_log[metric]))
             path = os.path.join(self.params.out_dir, 'best_mapping.t7')
             checkpoint = {'model': self.mapping.state_dict()}
-	    logging.info('* Saving the mapping parameters to %s ...' % path)
+            logging.info('* Saving the mapping parameters to %s ...' % path)
             torch.save(checkpoint, path)
 
     def reload_best(self, mdl="default"):

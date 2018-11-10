@@ -29,18 +29,18 @@ class Evaluator(object):
         """
         # get normalized embeddings
         self.mapping.eval()
-	src_emb = self.mapping(self.src_emb.weight).data
-	tgt_emb = self.tgt_emb.weight.data
+        src_emb = self.mapping(self.src_emb.weight).data
+        tgt_emb = self.tgt_emb.weight.data
         src_emb = src_emb / src_emb.norm(2, 1, keepdim=True).expand_as(src_emb)
         tgt_emb = tgt_emb / tgt_emb.norm(2, 1, keepdim=True).expand_as(tgt_emb)
         assert set(self.src_dico.word2id.keys()) == set(self.tgt_dico.word2id.keys())
         
         indices = [[self.src_dico.index(k), self.tgt_dico.index(k)] for k in self.src_dico.word2id.keys()]
         indices = torch.LongTensor(list(indices))
-	indices = indices.cuda() if self.params.cuda else indices
+        indices = indices.cuda() if self.params.cuda else indices
         #mean_cosine = F.cosine_similarity(src_emb[indices[:, 0]], tgt_emb[indices[:, 1]])
-	mean_cosine = (src_emb[indices[:, 0]] * tgt_emb[indices[:, 1]]).sum(1).mean()
-	mean_cosine = mean_cosine.item() if isinstance(mean_cosine, torch_tensor) else mean_cosine
+        mean_cosine = (src_emb[indices[:, 0]] * tgt_emb[indices[:, 1]]).sum(1).mean()
+        mean_cosine = mean_cosine.item() if isinstance(mean_cosine, torch_tensor) else mean_cosine
         logger.info("Mean cosine: %.5f" % mean_cosine)
         to_log['mean_cosine'] = mean_cosine
 

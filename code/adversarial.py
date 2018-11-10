@@ -12,9 +12,9 @@ import json
 
 from collections import OrderedDict
 
-from models import build_model
-from trainer_batch import Trainer
-from evaluator import Evaluator
+from code.models import build_model
+from code.trainer_batch import Trainer
+from code.evaluator import Evaluator
 
 parser = argparse.ArgumentParser(description='Adversarial post-processing')
 
@@ -123,14 +123,14 @@ for n_epoch in range(params.n_epochs):
         # mapping training (discriminator fooling)
         n_words_proc += trainer.mapping_step(stats, params)
 
-	# similarity training
-	trainer.sim_step(stats)
+        # similarity training
+        # trainer.sim_step(stats)
 
         # log stats
         if n_iter % 500 == 0:
             stats_str = [('DIS_COSTS', 'Discriminator loss'),
-			('GEN_COSTS', 'Generator loss'),
-			('SIM_COSTS', 'Similarity loss'),]
+            ('GEN_COSTS', 'Generator loss'),
+            ('SIM_COSTS', 'Similarity loss'),]
             stats_log = ['%s: %.4f' % (v, np.mean(stats[k]))
                          for k, v in stats_str if len(stats[k]) > 0]
             stats_log.append('%i samples/s' % int(n_words_proc / (time.time() - tic)))
